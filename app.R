@@ -102,7 +102,7 @@ ui <- fluidPage(
       
     ) )
 ),
-
+ # Tercer Panel
  tabPanel("Autor y Revista ideol",
          sidebarLayout(
            sidebarPanel(br(),
@@ -141,14 +141,16 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  ### PANEL 1: NÚMEROS ABSOLUTOS
+  
+  # tabla para recordar el máximo de votantes
   output$num_voto_max <- renderTable(
     data.frame(x = "Número máximo de votos", y = "5.112.658") %>% 
       summarise("Número máximo de votos" = "5.112.658")
   )
   
   
-  
+     ### Cálculos 
+  # participación
   output$participacion3 <- renderTable(
     data.frame( blanco = input$num_blanco, 
                 nulo = input$num_nulo, 
@@ -159,7 +161,7 @@ server <- function(input, output) {
       summarise("Participación" = ((PP+PSOE+MM+UP+Cs+Vox+blanco+nulo+otro ) / 5112658 )*100   )
   )
   
-  
+   #cálculo de escaños
   data3 <- reactive({ # calculo d'hondt para este panel
     
     data.frame(asiento = 1:136, PP = input$PP3, PSOE = input$PSOE3, MM = input$MM3, Vox = input$Vox3,
@@ -187,7 +189,7 @@ server <- function(input, output) {
   })
   
   
-  
+   # Cálculo de escaños por bloque
   output$tabla3 <- renderTable( #tabla de bloques
     
     if ( (input$num_blanco + input$num_otro + input$PP3 + input$PSOE3 + input$MM3 +
@@ -211,7 +213,7 @@ server <- function(input, output) {
     
   )
   
-  
+   # Cálculo porcentaje de cada partido
   output$tabla_porcentaje <- renderTable({
     
     valido <- input$PP3+input$PSOE3+input$MM3+input$Vox3+input$UP3+input$Cs3+input$num_blanco+input$num_otro
@@ -230,7 +232,7 @@ server <- function(input, output) {
       
   })
   
-  
+   # Gráfico de escaños
   output$plot3 <- renderPlot({ 
     
     if ( (input$num_blanco + input$PP3 + input$PSOE3 + input$MM3 +
