@@ -158,8 +158,8 @@ server <- function(input, output) {
                 otro = input$num_otro,
                 PP = input$PP3, PSOE = input$PSOE3, MM = input$MM3,
                 UP = input$UP3, Cs = input$Cs3, Vox = input$Vox3 ) %>% 
-      
-      summarise("Participación" = paste( (round(((PP+PSOE+MM+UP+Cs+Vox+blanco+nulo+otro ) / 5112658 ),4)*100)  ,"%" ) )
+      pivot_longer( blanco:Vox ) %>% 
+      summarise("Participación" = paste( (round(( sum(value) / 5112658 ),4)*100)  ,"%" ) )
   )
   
    # cálculo escaños
@@ -187,6 +187,32 @@ server <- function(input, output) {
       head(136) %>% 
       count(name) %>% 
       select(Partido = name , Asientos = n)
+      
+    
+       # otra forma de calcularlo menos repetitiva y más tidy
+#    data.frame(PP = input$PP3, PSOE = input$PSOE3, MM = input$MM3, Vox = input$Vox3,
+#               UP = input$UP3, Cs = input$Cs3,  otro = input$num_otro, blanco = input$num_blanco) %>% 
+#   mutate( voto_valido = PP+PSOE+MM+UP+Cs+Vox+blanco+otro ) %>% 
+#   pivot_longer( PP:otro ) %>% 
+#   transmute( 
+#     Partido = name,
+#     votos = value,
+#     division = value / voto_valido ) %>% 
+#    filter( division >= 0.05 ) %>% # filtrar por la barrera
+#    select( -division ) %>% 
+#    pivot_wider( names_from = "Partido", values_from = "votos") %>% 
+#    bind_cols( asiento = 1:136 ) %>%  # añadimos escaños
+#    select( asiento, everything() ) %>% 
+#    pivot_longer( 2:ncol(.) ) %>% 
+#    transmute( 
+#      Partido = name,
+#      Asientos = value/asiento ) %>% 
+#    slice_max(order_by = Asientos, n = 136) %>% 
+#    count(Partido) %>% 
+#    select(Partido, Asientos = n)
+    
+    
+    
   })
   
   
