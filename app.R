@@ -9,12 +9,12 @@ library(tidyverse)
 
 colores <- c("PSOE" =  "#dc0612", "PP" = "#007cc9", "Unidas Podemos" = "#732a66", 
              "Ciudadanos" = "#fa4e00", "Vox" = "#59c232", "Más Madrid" = "#0fddc4",
-             "Otro" = "gray20") # esto es para los gráficos
+             "Otro" = "gray20") # esto es para el gráfico
 
 poblacion <- 5112658 
 
 
-# Define UI for application that draws a histogram
+
 ui <- fluidPage(
   
   titlePanel("4-M: Elecciones a la Asamblea de Madrid"),
@@ -137,6 +137,7 @@ ui <- fluidPage(
          )
          
 )))
+
 
 
 
