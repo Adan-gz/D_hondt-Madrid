@@ -9,12 +9,13 @@ library(tidyverse)
 
 colores <- c("PSOE" =  "#dc0612", "PP" = "#007cc9", "Unidas Podemos" = "#732a66", 
              "Ciudadanos" = "#fa4e00", "Vox" = "#59c232", "Más Madrid" = "#0fddc4",
-             "Otro" = "gray20") # esto es para el gráfico
+             "Otro" = "gray20") # esto es para los gráficos
 
 poblacion <- 5112658 
 
 
 
+# Define UI for application that draws a histogram
 ui <- fluidPage(
   
   titlePanel("4-M: Elecciones a la Asamblea de Madrid"),
@@ -52,26 +53,26 @@ ui <- fluidPage(
                )
                
              )),
-    
+  
     # Segundo Panel
     tabPanel("Votos y Escaños",
-  
+             
   sidebarLayout(
     sidebarPanel(
       h5(strong("Selecciona el número de votos:")),
       
-      sliderInput("PP3","PP",value =  719852, min = 0 ,max = 5112658, ticks = FALSE),
-      sliderInput("PSOE3","PSOE", value =  884218, min = 0 ,max = 5112658, ticks = FALSE),
-      sliderInput("MM3","Más Madrid", value =  475672, min = 0 ,max = 5112658, ticks = FALSE),
-      sliderInput("Vox3","Vox", value =  287667, min = 0 ,max = 5112658, ticks = FALSE),
-      sliderInput("UP3","Unidas Podemos", value =  181231, min = 0, max = 5112658, ticks = FALSE),
-      sliderInput("Cs3","Ciudadanos", value =  629940, min = 0 ,max = 5112658, ticks = FALSE),
-      sliderInput("num_blanco","Voto en blanco", value =  25563, min = 0, max = 5112658, ticks = FALSE),
-      sliderInput("num_otro","Voto a otros partidos", value = 70555, min = 0,max = 5112658, ticks = FALSE),
-      sliderInput("num_nulo","Voto Nulo", value = 13527, min = 0,max = 5112658, ticks = FALSE)
+      sliderInput("PP3","PP",value =  1359096, min = 0 ,max = 5112658, ticks = FALSE),
+      sliderInput("PSOE3","PSOE", value =  868778, min = 0 ,max = 5112658, ticks = FALSE),
+      sliderInput("MM3","Más Madrid", value =  607895, min = 0 ,max = 5112658, ticks = FALSE),
+      sliderInput("Vox3","Vox", value =  288402, min = 0 ,max = 5112658, ticks = FALSE),
+      sliderInput("UP3","Unidas Podemos", value =  295906, min = 0, max = 5112658, ticks = FALSE),
+      sliderInput("Cs3","Ciudadanos", value =  117934, min = 0 ,max = 5112658, ticks = FALSE),
+      sliderInput("num_otro","Voto a otros partidos", value = 21442, min = 0,max = 5112658, ticks = FALSE),
+      sliderInput("num_blanco","Voto en blanco", value =  17869, min = 0, max = 5112658, ticks = FALSE),
+      sliderInput("num_nulo","Voto Nulo", value = 3574, min = 0,max = 5112658, ticks = FALSE)
     ),
     
-    
+
     mainPanel(
       br(),
       h6(" En este panel se incluye el proceder común de las calculadoras D'hondt. En la barrera de la izquierda puedes añadir
@@ -86,8 +87,9 @@ ui <- fluidPage(
         
       ) ,
       
-      strong("Porcentaje de voto a los partidos:"),
+      strong("Porcentaje de voto:"),
       tableOutput("tabla_porcentaje"),
+      br(),
       plotOutput("plot3", width = "550px", height = "300px") ,
       br(),
       br(),
@@ -102,7 +104,7 @@ ui <- fluidPage(
       
     ) )
 ),
- # Tercer Panel
+
  tabPanel("Autor y Revista ideol",
          sidebarLayout(
            sidebarPanel(br(),
@@ -142,16 +144,14 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  
-  # tabla para recordar el máximo de votantes
+  ### PANEL 1: NÚMEROS ABSOLUTOS
   output$num_voto_max <- renderTable(
     data.frame(x = "Número máximo de votos", y = "5.112.658") %>% 
       summarise("Número máximo de votos" = "5.112.658")
   )
   
   
-     ### Cálculos 
-  # participación
+  
   output$participacion3 <- renderTable(
     data.frame( blanco = input$num_blanco, 
                 nulo = input$num_nulo, 
@@ -159,10 +159,10 @@ server <- function(input, output) {
                 PP = input$PP3, PSOE = input$PSOE3, MM = input$MM3,
                 UP = input$UP3, Cs = input$Cs3, Vox = input$Vox3 ) %>% 
       
-      summarise("Participación" = ((PP+PSOE+MM+UP+Cs+Vox+blanco+nulo+otro ) / 5112658 )*100   )
+      summarise("Participación" = paste( (round(((PP+PSOE+MM+UP+Cs+Vox+blanco+nulo+otro ) / 5112658 ),4)*100)  ,"%" ) )
   )
   
-   #cálculo de escaños
+  
   data3 <- reactive({ # calculo d'hondt para este panel
     
     data.frame(asiento = 1:136, PP = input$PP3, PSOE = input$PSOE3, MM = input$MM3, Vox = input$Vox3,
@@ -190,7 +190,7 @@ server <- function(input, output) {
   })
   
   
-   # Cálculo de escaños por bloque
+  
   output$tabla3 <- renderTable( #tabla de bloques
     
     if ( (input$num_blanco + input$num_otro + input$PP3 + input$PSOE3 + input$MM3 +
@@ -214,26 +214,24 @@ server <- function(input, output) {
     
   )
   
-   # Cálculo porcentaje de cada partido
+  
   output$tabla_porcentaje <- renderTable({
     
     valido <- input$PP3+input$PSOE3+input$MM3+input$Vox3+input$UP3+input$Cs3+input$num_blanco+input$num_otro
     
     data.frame("PP" = input$PP3, "Ciudadanos" = input$Cs3, "Vox" = input$Vox3,
                "PSOE" = input$PSOE3,  "Unidas Podemos" = input$UP3, "Más Madrid" = input$MM3, 
-               "Blanco" = input$num_blanco, "Otro" = input$num_otro ) %>% 
+               "Otro" = input$num_otro, "Blanco" = input$num_blanco) %>% 
       pivot_longer(1:8, names_to = "Partidos") %>% 
-      mutate( value =  round( (value / valido)*100,2) ) %>%
-      
-      #filter( Partidos %in% c("PP","PSOE","Más.Madrid","Unidas.Podemos","Vox","Ciudadanos","blanco","input.num_otro") ) %>% 
-      
+      mutate( value =  round( (value / valido)*100,2) ) %>%      
       mutate( value = paste(value, " %")
       ) %>% select(Partidos, "Voto" = 2) %>% 
       pivot_wider(names_from = "Partidos", values_from = "Voto")
-      
+     
+    
   })
   
-   # Gráfico de escaños
+  
   output$plot3 <- renderPlot({ 
     
     if ( (input$num_blanco + input$PP3 + input$PSOE3 + input$MM3 +
