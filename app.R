@@ -1,23 +1,15 @@
-# Esta APP Shiny ha sido creada para calcular el porcentaje de escaños que recibiría
+
+# Esta sencilla APP Shiny ha sido creada para calcular el porcentaje de escaños que recibiría
 # cada partido, de los 6 principales que se presentan, en las próximas elecciones
 # autonómicas a la Comunidad de Madrid del 4 de Mayo.
-
-
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
 
 library(shiny)
 library(tidyverse)
 
 
 colores <- c("PSOE" =  "#dc0612", "PP" = "#007cc9", "Unidas Podemos" = "#732a66", 
-             "Ciudadanos" = "#fa4e00", "Vox" = "#59c232", "Más Madrid" = "#0fddc4") # esto es para los gráficos
+             "Ciudadanos" = "#fa4e00", "Vox" = "#59c232", "Más Madrid" = "#0fddc4",
+             "Otro" = "gray20") # esto es para los gráficos
 
 poblacion <- 5112658 
 
@@ -62,7 +54,7 @@ ui <- fluidPage(
              )),
     
     # Segundo Panel
-    tabPanel("En Números Absolutos",
+    tabPanel("Votos y Escaños",
   
   sidebarLayout(
     sidebarPanel(
@@ -75,8 +67,8 @@ ui <- fluidPage(
       sliderInput("UP3","Unidas Podemos", value =  181231, min = 0, max = 5112658, ticks = FALSE),
       sliderInput("Cs3","Ciudadanos", value =  629940, min = 0 ,max = 5112658, ticks = FALSE),
       sliderInput("num_blanco","Voto en blanco", value =  25563, min = 0, max = 5112658, ticks = FALSE),
-      sliderInput("num_nulo","Voto Nulo", value = 13527, min = 0,max = 5112658, ticks = FALSE),
-      sliderInput("num_otro","Voto a otros partidos", value = 70555, min = 0,max = 5112658, ticks = FALSE)
+      sliderInput("num_otro","Voto a otros partidos", value = 70555, min = 0,max = 5112658, ticks = FALSE),
+      sliderInput("num_nulo","Voto Nulo", value = 13527, min = 0,max = 5112658, ticks = FALSE)
     ),
     
     
@@ -93,6 +85,9 @@ ui <- fluidPage(
         tableOutput("tabla3") # bloque de escaños
         
       ) ,
+      
+      strong("Porcentaje de voto a los partidos:"),
+      tableOutput("tabla_porcentaje"),
       plotOutput("plot3", width = "550px", height = "300px") ,
       br(),
       br(),
@@ -101,12 +96,11 @@ ui <- fluidPage(
                  es porque el voto nulo no se tiene en cuenta en el reparto de escaños. Sin embargo, si aumentas o disminuyes el voto en blanco, no solo sube o cae la
                  participación, sino que también puede cambiar el reparto de escaños. ¿Por qué? Porque los escaños se reparten a partir del voto válido,
                  que es la suma de los votos a todas las candidaturas más el voto en blanco. Es decir, si hay 100 votos y un partido tiene 5, supera la barrera 
-                 legal del 5% y tiene derecho a escaño. Pero si aumenta el total a 2 escaños, ahora tiene menos de un 5% y se queda fuera. Prueba a dar a un partido pocos votos,
-                 pero los suficientes para que consiga escaños. Ahora aumenta el voto en blanco y verás cómo los pierde")
+                 legal del 5% y tiene derecho a escaño. Pero si el total de votos a aumenta a 110, ahora el partido tiene menos de un 5%, por lo que se queda fuera del reparto. Si lo quieres visualizar,
+                prueba a dar a un partido pocos votos,
+                 pero los suficientes para que consiga escaños. Ahora aumenta el voto en blanco y verás cómo los pierde.")
       
-    ) ),
-  strong("Porcentaje de voto a los partidos:"),
-  tableOutput("tabla_porcentaje"),
+    ) )
 ),
 
  tabPanel("Autor y Revista ideol",
@@ -125,14 +119,14 @@ ui <- fluidPage(
              br(),
              h6("Soy Romén Adán, politólogo por la U. Pompeu Fabra y estudiante de Máster en Análisis Político y Electoral en la Carlos III.
                 Si quieres indagar en el código de R para crear la app puedes verlo en mi ",
-                a(href="https://github.com/Adan-gz/D_hondt-Madrid/blob/main/app.R", 
+                a(href="https://github.com/Adan-gz/D_hondt-Madrid", 
                   "github"),". Y si tienes consejos para mejorarla son más que bienvenidos."),
              br(),
              h6(strong("Ideol")," es una revista que hemos creado entre varios compañeros y compañeras de diferentes disciplinas, mayoritariamente del mundo de las
                         Ciencias Sociales. Esperamos aportar una mirada crítica al análisis de actualidad política y social, partiendo del conocimiento teórico de nuestras
                         ramas de estudio. Y, como no, tratando de sustentar nuestros argumentos en datos. No te olvides de seguirnos en nuestras",
                 a(href="https://twitter.com/revista_ideol?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor", 
-                  "redes") ,"y leernos en ", a(href="https://medium.com/revista-ideol</a>!</p>", 
+                  "redes") ,"y leernos en ", a(href="https://medium.com/revista-ideol", 
                                                "Medium"), "."),
              
              br(),
@@ -145,7 +139,7 @@ ui <- fluidPage(
 )))
 
 
-# Define server logic required to draw a histogram
+
 server <- function(input, output) {
   ### PANEL 1: NÚMEROS ABSOLUTOS
   output$num_voto_max <- renderTable(
@@ -178,12 +172,14 @@ server <- function(input, output) {
               MM = ifelse( MM /voto_valido >= 0.05 , MM , 0 ),
               Vox = ifelse( Vox /voto_valido >= 0.05 , Vox , 0),
               UP = ifelse( UP /voto_valido >= 0.05 , UP , 0 ),
-              Cs = ifelse( Cs /voto_valido >= 0.05 , Cs , 0)    ) %>% 
+              Cs = ifelse( Cs /voto_valido >= 0.05 , Cs , 0) ,
+              otro = ifelse( otro /voto_valido >= 0.05 , otro , 0)) %>% 
       
       transmute(PP = PP / asiento, PSOE = PSOE / asiento, "Más Madrid" = MM / asiento,
-                Vox = Vox / asiento, "Unidas Podemos" = UP / asiento, "Ciudadanos" = Cs / asiento) %>% 
-      select(PP:Ciudadanos) %>% 
-      pivot_longer(1:6) %>% 
+                Vox = Vox / asiento, "Unidas Podemos" = UP / asiento, "Ciudadanos" = Cs / asiento,
+                "Otro" = otro / asiento) %>% 
+      select(PP:Otro) %>% 
+      pivot_longer(1:7) %>% 
       arrange(desc(value)) %>% 
       head(136) %>% 
       count(name) %>% 
@@ -204,7 +200,8 @@ server <- function(input, output) {
       data3() %>% 
         mutate(Bloque = case_when(
           Partido %in% c("PP","Vox","Ciudadanos") ~  "Derecha",
-          Partido %in% c("PSOE","Unidas Podemos","Más Madrid") ~ "Izquierda")) %>% 
+          Partido %in% c("PSOE","Unidas Podemos","Más Madrid") ~ "Izquierda",
+          Partido == "Otro" ~ "Otro") ) %>% 
         filter(!is.na(Bloque)) %>% 
         group_by(Bloque) %>% 
         summarise("Escaños" = sum(Asientos) )
@@ -230,25 +227,7 @@ server <- function(input, output) {
       mutate( value = paste(value, " %")
       ) %>% select(Partidos, "Voto" = 2) %>% 
       pivot_wider(names_from = "Partidos", values_from = "Voto")
-    
-    #     ggplot(aes(reorder(name,-value), value))+
-    #    theme_minimal()+
-    #    geom_col(aes(fill = name))+
-    #    scale_fill_manual(values = colores)+
-    #    geom_text(aes(y = value+1.5 ,label = paste(value," %")), size = 4.5)+
-    #    geom_label(aes(label = "Porcentaje de voto\nde cada partido",
-    #                  x = 3, y = .45))+
-    #    labs( title = "",
-    #          x = "", y = "")+
-    #    theme(axis.text.x = element_text(face = "bold", size = 12),
-    #          axis.text.y = element_blank(),
-    #          legend.position = "none",
-    #  plot.title = element_text(size = 14),
-    #         panel.grid.major.x = element_blank(),
-    #      panel.grid.minor.x = element_blank())
-    
-    
-    
+      
   })
   
   
@@ -288,5 +267,3 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
