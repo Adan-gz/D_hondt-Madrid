@@ -162,7 +162,7 @@ server <- function(input, output) {
       summarise("Participación" = paste( (round(( sum(value) / 5112658 ),4)*100)  ,"%" ) )
   )
   
-   # cálculo escaños
+   # cálculo escaños (forma original)
   data3 <- reactive({ # calculo d'hondt para este panel
     
     data.frame(asiento = 1:136, PP = input$PP3, PSOE = input$PSOE3, MM = input$MM3, Vox = input$Vox3,
@@ -189,27 +189,27 @@ server <- function(input, output) {
       select(Partido = name , Asientos = n)
       
     
-       # otra forma de calcularlo menos repetitiva y más tidy
-#    data.frame(PP = input$PP3, PSOE = input$PSOE3, MM = input$MM3, Vox = input$Vox3,
-#               UP = input$UP3, Cs = input$Cs3,  otro = input$num_otro, blanco = input$num_blanco) %>% 
-#   mutate( voto_valido = PP+PSOE+MM+UP+Cs+Vox+blanco+otro ) %>% 
-#   pivot_longer( PP:otro ) %>% 
-#   transmute( 
-#     Partido = name,
-#     votos = value,
-#     division = value / voto_valido ) %>% 
-#    filter( division >= 0.05 ) %>% # filtrar por la barrera
-#    select( -division ) %>% 
-#    pivot_wider( names_from = "Partido", values_from = "votos") %>% 
-#    bind_cols( asiento = 1:136 ) %>%  # añadimos escaños
-#    select( asiento, everything() ) %>% 
-#    pivot_longer( 2:ncol(.) ) %>% 
-#    transmute( 
-#      Partido = name,
-#      Asientos = value/asiento ) %>% 
-#    slice_max(order_by = Asientos, n = 136) %>% 
-#    count(Partido) %>% 
-#    select(Partido, Asientos = n)
+       # forma de calcularlo con menos codigo y más tidy
+# tibble(
+#    partido = c("PP","PSOE","MM","Vox","UP","Cs","otro","blanco"),
+#    n_voto = c(1359096, 868778, 607895, 288402, 295906, 117934, 21442,
+#               10721) ) %>% 
+#                                    filtramos por la barrera legal
+#  mutate(voto_valido = sum(n_voto),
+#         div = n_voto/voto_valido) %>% 
+#  filter( div >=0.05 ) %>% 
+#                                    añadimos los asientos
+#  select(partido, n_voto) %>%  
+#  pivot_wider(names_from = partido, values_from = n_voto) %>% 
+#  bind_cols( tibble(asiento = 1:136)  ) %>% 
+#                                   dividimos votos entre asientos
+#  select(asiento, everything(.)) %>% 
+#  pivot_longer( 2:ncol(.) ) %>% 
+#  mutate(   div = value / asiento ) %>% 
+#                                    nos quedamos con los 136 primeros y contamos a los partidos
+#  slice_max(order_by = div, n = 136) %>% 
+#  count(name) %>% 
+#  select("Partido" = name, "Asientos" = n)
     
     
     
